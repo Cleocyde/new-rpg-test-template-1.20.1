@@ -1,0 +1,42 @@
+{
+	"schemaVersion": 1,
+	"id": "new_rpg_test",
+	"version": "${version}",
+	"name": "New RPG Test",
+	"description": "This is a new RPG-like minecraft mod",
+	"authors": [
+		"Cleocyde!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/new-rpg-test/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.cleocyde.newrpgtest.NewRPGTest"
+		],
+
+		"client": [
+			"net.cleocyde.newrpgtest.NewRPGTestClient"
+		],
+
+		"fabric-datagen": [
+			"net.cleocyde.newrpgtest.NewRPGTestDataGenerator"
+		]
+	},
+	"mixins": [
+		"new-rpg-test.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.24",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
