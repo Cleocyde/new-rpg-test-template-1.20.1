@@ -5,15 +5,18 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 
 public class EntityData {
-    PlayerEntity player;
-    MinecraftServer server;
 
-    Status status;
-    public EntityData(MinecraftServer server, PlayerEntity player){
-        this.player = player;
+    public PlayerEntity entity;
+    public MinecraftServer server;
+    public Status status;
+
+    public EntityData(MinecraftServer server, PlayerEntity entity){
+        this.entity = entity;
         this.server = server;
-        this.status = new Status(this);
+        status = new Status(this);
 
     }
+
+
 
 }
