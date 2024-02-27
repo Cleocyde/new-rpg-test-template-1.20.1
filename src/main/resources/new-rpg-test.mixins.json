@@ -1,11 +1,14 @@
 {
-	"required": true,
-	"package": "net.cleocyde.newrpgtest.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"mixins": [
-      "CustomDamageMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
+  "required": true,
+  "package": "net.cleocyde.newrpgtest.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "CustomDamageMixin",
+    "NoHungerMixin",
+    "NoXpDropMixin",
+    "NoXpOrbsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
 	}
 }

@@ -2,7 +2,6 @@ package net.cleocyde.newrpgtest.mixin;
 
 import net.cleocyde.newrpgtest.EntityData;
 import net.cleocyde.newrpgtest.NewRPGTest;
-import net.cleocyde.newrpgtest.stats.Resource;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +26,7 @@ public abstract class CustomDamageMixin {
 
 			// Apply the damage to the custom health system
 			entityData.status.HP.Add(-amount);
+			entityData.status.updateActionBar(player);
 			System.out.println(entityData.status.HP);
 			System.out.println(player.getHealth());
 			// Cancel the original damage

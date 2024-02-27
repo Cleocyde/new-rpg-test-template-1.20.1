@@ -1,30 +1,26 @@
 package net.cleocyde.newrpgtest;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.netty.buffer.Unpooled;
-import net.cleocyde.newrpgtest.menu.MenuSystem;
-import net.cleocyde.newrpgtest.stats.Resource;
-import net.cleocyde.newrpgtest.stats.Status;
+import net.cleocyde.newrpgtest.utils.ItemUtils;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.core.jmx.Server;
+import net.minecraft.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +29,12 @@ import java.util.Map;
 
 
 public class NewRPGTest implements ModInitializer {
-	public static final String MOD_ID = "rpgmod";
+
+	public static final String MOD_ID = "newrpgtest";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	private static Map<ServerPlayerEntity, EntityData> entityDatas;
+
+	public static final Identifier OPEN_GUI_PACKET = new Identifier(MOD_ID, "open_gui");
 
 	public static Map<ServerPlayerEntity, EntityData> getEntityDatas(){return entityDatas;}
 	@Override
@@ -44,9 +43,21 @@ public class NewRPGTest implements ModInitializer {
 
 		entityDatas = new HashMap<>();
 
+
+		ItemUtils.registerModItems();
+
+
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();
 			entityDatas.put(player, new EntityData(server, player));
+			EntityData entityData = entityDatas.get(player);
+			player.experienceLevel = entityData.status.level;
+		});
+
+		ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
+			newPlayer.experienceLevel = oldPlayer.experienceLevel;
+			newPlayer.experienceProgress = oldPlayer.experienceProgress;
+			newPlayer.totalExperience = oldPlayer.totalExperience;
 		});
 
 
@@ -60,11 +71,13 @@ public class NewRPGTest implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 				EntityData entityData = entityDatas.get(player);
-				entityData.status.updateActionBar(player);
+
 				entityData.status.RefreshHealthBar(player);
 
 			}
 		});
+
+
 
 		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
 			dispatcher.register(CommandManager.literal("rpg")
@@ -82,6 +95,25 @@ public class NewRPGTest implements ModInitializer {
 											.executes((this::executeSetHealth))))));
 		}));
 
+		/*CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
+			dispatcher.register(CommandManager.literal("rpg")
+					.then(CommandManager.literal("getattributes")
+							.then(CommandManager.argument("player", EntityArgumentType.player()),
+											client.setScreen)));
+		}));*/
+
+
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated, environment) -> {
+			LiteralArgumentBuilder<ServerCommandSource> command = CommandManager.literal("rpg")
+					.then(CommandManager.literal("getattributes")
+							.then(CommandManager.argument("player", EntityArgumentType.player())
+									.executes(this::openGui)));
+			dispatcher.register(command);
+		});
+
+
+
+
 
 
 	}
@@ -92,6 +124,7 @@ public class NewRPGTest implements ModInitializer {
 		EntityData entityData = entityDatas.get(player);
 		if(entityData != null){
 			entityData.status.EXP.Add(xp);
+
 		}
 		return 1;
 	}
@@ -103,8 +136,32 @@ public class NewRPGTest implements ModInitializer {
 		EntityData entityData = entityDatas.get(player);
 		if(entityData !=null){
 			entityData.status.HP.Set(health);
+
 		}
 		return 1;
 	}
+
+	private int executeGetAttributes(CommandContext<ServerCommandSource> context) throws CommandSyntaxException{
+		ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+
+
+		EntityData entityData = entityDatas.get(player);
+		if(entityData !=null){
+			entityData.status.Luck.GetValue();
+			BrObject.print(entityData.status.Intelligence.GetValue());
+			player.sendMessage(Text.literal("you have " + (int)entityData.status.Intelligence.GetValue() + " intelligence."));
+		}
+		return 1;
+	}
+
+	private int openGui(CommandContext<ServerCommandSource> context) {
+		ServerPlayerEntity player = context.getSource().getPlayer();
+		PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+		// Here you can write any data you want to send to the client, for example:
+		passedData.writeInt(1); // let's say this is the id of the GUI to open
+		ServerPlayNetworking.send(player, OPEN_GUI_PACKET, passedData);
+		return 1;
+	}
+
 
 }

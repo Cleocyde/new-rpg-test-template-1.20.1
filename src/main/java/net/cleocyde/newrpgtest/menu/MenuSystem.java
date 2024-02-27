@@ -19,13 +19,13 @@ public class MenuSystem extends Screen {
         button1 = ButtonWidget.builder(Text.literal("Button 1"), button -> {
                     System.out.println("You clicked button1!");
                 })
-                .dimensions(width / 2 - 205, 20, 200, 20)
+                .dimensions(width / 2 - 205, 20, 50, 50)
                 .tooltip(Tooltip.of(Text.literal("Tooltip of button1")))
                 .build();
         button2 = ButtonWidget.builder(Text.literal("Button 2"), button -> {
                     System.out.println("You clicked button2!");
                 })
-                .dimensions(width / 2 + 5, 20, 200, 20)
+                .dimensions(width / 2 + 5, 20, 50, 50)
                 .tooltip(Tooltip.of(Text.literal("Tooltip of button2")))
                 .build();
 

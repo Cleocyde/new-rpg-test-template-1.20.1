@@ -44,7 +44,7 @@ public class Status extends BrObject {
         Vitality = new Attribute(0);
         Agility = new Attribute(0);
         Strength = new Attribute(0);
-        Intelligence = new Attribute(0);
+        Intelligence = new Attribute(120);
         Luck = new Attribute(0);
 
         HP = new Resource(MaximumHealth(), this::MaximumHealth);
@@ -98,6 +98,10 @@ public class Status extends BrObject {
     }
     public void UpdateMinecraftEXPBar(float previousValue, float newValue, float maximumValue){
         var player = entityData.entity;
+        player.experienceProgress = EXP.value / LevelToNext();
+        player.experienceLevel = this.level;
+
+        player.addExperienceLevels(0);
         //does shit to update
     }
 
