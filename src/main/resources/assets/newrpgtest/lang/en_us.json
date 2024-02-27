@@ -1,4 +1,8 @@
 {
-  "item.newrpgtest.vitality": "Vitality"
+  "item.newrpgtest.vitality": "Vitality",
+  "item.newrpgtest.agility": "Agility",
+  "item.newrpgtest.strength": "Strength",
+  "item.newrpgtest.luck": "Luck",
+  "item.newrpgtest.intelligence": "Intelligence"
 
 }

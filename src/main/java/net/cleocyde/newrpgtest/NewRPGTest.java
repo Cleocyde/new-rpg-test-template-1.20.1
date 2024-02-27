@@ -49,9 +49,12 @@ public class NewRPGTest implements ModInitializer {
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();
-			entityDatas.put(player, new EntityData(server, player));
-			EntityData entityData = entityDatas.get(player);
-			player.experienceLevel = entityData.status.level;
+			entityDatas.get(player);
+			if(entityDatas.get(player) == null) {
+				entityDatas.put(player, new EntityData(server, player));
+				EntityData entityData = entityDatas.get(player);
+				player.experienceLevel = entityData.status.level;
+			}
 		});
 
 		ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
@@ -86,6 +89,47 @@ public class NewRPGTest implements ModInitializer {
 									.then(CommandManager.argument("xp", IntegerArgumentType.integer())
 											.executes((this::executeSetLevel))))));
 		}));
+		//Give Vitality
+		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
+			dispatcher.register(CommandManager.literal("rpg")
+					.then(CommandManager.literal("givevita")
+							.then(CommandManager.argument("player", EntityArgumentType.player())
+									.then(CommandManager.argument("vitality", IntegerArgumentType.integer())
+											.executes((this::executeAddVitality))))));
+		}));
+		//Give Agility
+		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
+			dispatcher.register(CommandManager.literal("rpg")
+					.then(CommandManager.literal("giveagi")
+							.then(CommandManager.argument("player", EntityArgumentType.player())
+									.then(CommandManager.argument("agility", IntegerArgumentType.integer())
+											.executes((this::executeAddAgility))))));
+		}));
+		//Give Luck
+		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
+			dispatcher.register(CommandManager.literal("rpg")
+					.then(CommandManager.literal("giveluck")
+							.then(CommandManager.argument("player", EntityArgumentType.player())
+									.then(CommandManager.argument("luck", IntegerArgumentType.integer())
+											.executes((this::executeAddLuck))))));
+		}));
+		//Give Strength
+		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
+			dispatcher.register(CommandManager.literal("rpg")
+					.then(CommandManager.literal("givestr")
+							.then(CommandManager.argument("player", EntityArgumentType.player())
+									.then(CommandManager.argument("strength", IntegerArgumentType.integer())
+											.executes((this::executeAddStrength))))));
+		}));
+
+		//Give Intelligence
+		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
+			dispatcher.register(CommandManager.literal("rpg")
+					.then(CommandManager.literal("giveint")
+							.then(CommandManager.argument("player", EntityArgumentType.player())
+									.then(CommandManager.argument("intelligence", IntegerArgumentType.integer())
+											.executes((this::executeAddIntelligence))))));
+		}));
 
 		CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated, environment) -> {
 			dispatcher.register(CommandManager.literal("rpg")
@@ -104,10 +148,13 @@ public class NewRPGTest implements ModInitializer {
 
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated, environment) -> {
+
 			LiteralArgumentBuilder<ServerCommandSource> command = CommandManager.literal("rpg")
 					.then(CommandManager.literal("getattributes")
 							.then(CommandManager.argument("player", EntityArgumentType.player())
-									.executes(this::openGui)));
+									.executes(this::openGui)
+									.executes(this::executeGetAttributes)));
+
 			dispatcher.register(command);
 		});
 
@@ -124,6 +171,62 @@ public class NewRPGTest implements ModInitializer {
 		EntityData entityData = entityDatas.get(player);
 		if(entityData != null){
 			entityData.status.EXP.Add(xp);
+
+		}
+		return 1;
+	}
+
+	private int executeAddVitality(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+		int vitality = IntegerArgumentType.getInteger(context, "vitality");
+
+		EntityData entityData = entityDatas.get(player);
+		if(entityData != null){
+			entityData.status.Vitality.Add(vitality);
+
+		}
+		return 1;
+	}
+	private int executeAddAgility(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+		int agility = IntegerArgumentType.getInteger(context, "agility");
+
+		EntityData entityData = entityDatas.get(player);
+		if(entityData != null){
+			entityData.status.Agility.Add(agility);
+
+		}
+		return 1;
+	}
+	private int executeAddStrength(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+		int strength = IntegerArgumentType.getInteger(context, "strength");
+
+		EntityData entityData = entityDatas.get(player);
+		if(entityData != null){
+			entityData.status.Strength.Add(strength);
+
+		}
+		return 1;
+	}
+	private int executeAddLuck(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+		int luck = IntegerArgumentType.getInteger(context, "luck");
+
+		EntityData entityData = entityDatas.get(player);
+		if(entityData != null){
+			entityData.status.Luck.Add(luck);
+
+		}
+		return 1;
+	}
+	private int executeAddIntelligence(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+		int intelligence = IntegerArgumentType.getInteger(context, "intelligence");
+
+		EntityData entityData = entityDatas.get(player);
+		if(entityData != null){
+			entityData.status.Intelligence.Add(intelligence);
 
 		}
 		return 1;
@@ -148,8 +251,11 @@ public class NewRPGTest implements ModInitializer {
 		EntityData entityData = entityDatas.get(player);
 		if(entityData !=null){
 			entityData.status.Luck.GetValue();
-			BrObject.print(entityData.status.Intelligence.GetValue());
-			player.sendMessage(Text.literal("you have " + (int)entityData.status.Intelligence.GetValue() + " intelligence."));
+			player.sendMessage(Text.literal("you have " + (int)entityData.status.Vitality.GetValue() + " Vitality."));
+			player.sendMessage(Text.literal("you have " + (int)entityData.status.Agility.GetValue() + " Agility."));
+			player.sendMessage(Text.literal("you have " + (int)entityData.status.Strength.GetValue() + " Strength."));
+			player.sendMessage(Text.literal("you have " + (int)entityData.status.Intelligence.GetValue() + " Intelligence."));
+			player.sendMessage(Text.literal("you have " + (int)entityData.status.Luck.GetValue() + " Luck."));
 		}
 		return 1;
 	}
