@@ -12,8 +12,10 @@ public class MenuSystem extends Screen {
     public MenuSystem() {
         super(Text.literal("TestGUI"));
     }
+
     public ButtonWidget button1;
     public ButtonWidget button2;
+
     @Override
     protected void init() {
         button1 = ButtonWidget.builder(Text.literal("Button 1"), button -> {

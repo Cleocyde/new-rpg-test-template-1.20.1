@@ -9,6 +9,7 @@ import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
+
 public class ItemUtils {
 
     public static final Item VITALITY = registerItem("vitality", new Item(new FabricItemSettings()));
@@ -29,6 +30,7 @@ public class ItemUtils {
     private static Item registerItem(String name, Item item) {
         return Registry.register(Registries.ITEM, new Identifier(NewRPGTest.MOD_ID, name), item);
     }
+
     public static void registerModItems() {
         NewRPGTest.LOGGER.info("Registering Mod Items for " + NewRPGTest.MOD_ID);
 

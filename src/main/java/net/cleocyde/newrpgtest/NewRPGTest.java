@@ -5,36 +5,45 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.netty.buffer.Unpooled;
+import net.cleocyde.newrpgtest.stats.Status;
 import net.cleocyde.newrpgtest.utils.ItemUtils;
+import net.cleocyde.newrpgtest.utils.StateSaverAndLoader;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.block.Blocks;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
+import net.minecraft.entity.player.PlayerEntity;
 import java.util.Map;
+
+import static net.cleocyde.newrpgtest.stats.Status.Vitality;
 
 
 public class NewRPGTest implements ModInitializer {
 
 	public static final String MOD_ID = "newrpgtest";
+
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	private static Map<ServerPlayerEntity, EntityData> entityDatas;
 
 	public static final Identifier OPEN_GUI_PACKET = new Identifier(MOD_ID, "open_gui");
+	public static final Identifier VITALITY = new Identifier(MOD_ID, "vitality");
 
 	public static Map<ServerPlayerEntity, EntityData> getEntityDatas(){return entityDatas;}
 	@Override
@@ -43,8 +52,36 @@ public class NewRPGTest implements ModInitializer {
 
 		entityDatas = new HashMap<>();
 
-
 		ItemUtils.registerModItems();
+
+
+		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, entity) -> {
+
+			if (state.getBlock() == Blocks.GRASS_BLOCK || state.getBlock() == Blocks.DIRT) {
+				StateSaverAndLoader serverState = StateSaverAndLoader.getServerState(world.getServer());
+				// Increment the amount vitality when breaking a dirt block
+				EntityData entityData = entityDatas.get(player);
+
+				serverState.Vitality.Add(1);
+
+				Status playerState = StateSaverAndLoader.getPlayerState(player);
+				playerState.Vitality.Add(1);
+				// Send a packet to the client
+				MinecraftServer server = world.getServer();
+
+				PacketByteBuf data = PacketByteBufs.create();
+				data.writeString(serverState.Vitality.toString());
+				data.writeString(playerState.Vitality.toString());
+
+				ServerPlayerEntity playerEntity = server.getPlayerManager().getPlayer(player.getUuid());
+				server.execute(() -> {
+					ServerPlayNetworking.send(playerEntity, VITALITY, data);
+				});
+			}
+		});
+
+
+
 
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -74,7 +111,7 @@ public class NewRPGTest implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 				EntityData entityData = entityDatas.get(player);
-
+				
 				entityData.status.RefreshHealthBar(player);
 
 			}
@@ -182,7 +219,7 @@ public class NewRPGTest implements ModInitializer {
 
 		EntityData entityData = entityDatas.get(player);
 		if(entityData != null){
-			entityData.status.Vitality.Add(vitality);
+			Vitality.Add(vitality);
 
 		}
 		return 1;
@@ -251,7 +288,7 @@ public class NewRPGTest implements ModInitializer {
 		EntityData entityData = entityDatas.get(player);
 		if(entityData !=null){
 			entityData.status.Luck.GetValue();
-			player.sendMessage(Text.literal("you have " + (int)entityData.status.Vitality.GetValue() + " Vitality."));
+			player.sendMessage(Text.literal("you have " + (int) Vitality.GetValue() + " Vitality."));
 			player.sendMessage(Text.literal("you have " + (int)entityData.status.Agility.GetValue() + " Agility."));
 			player.sendMessage(Text.literal("you have " + (int)entityData.status.Strength.GetValue() + " Strength."));
 			player.sendMessage(Text.literal("you have " + (int)entityData.status.Intelligence.GetValue() + " Intelligence."));
@@ -265,6 +302,7 @@ public class NewRPGTest implements ModInitializer {
 		PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
 		// Here you can write any data you want to send to the client, for example:
 		passedData.writeInt(1); // let's say this is the id of the GUI to open
+		assert player != null;
 		ServerPlayNetworking.send(player, OPEN_GUI_PACKET, passedData);
 		return 1;
 	}
